@@ -1,3 +1,29 @@
+# J++Device — Meshtastic port
+
+A Meshtastic port for the J++Device: ESP32-C6 + SX1276 LoRa, SSD1306 OLED,
+DS1307 RTC, SD card, ADC battery sense, buzzer and a 5-key resistor-ladder
+keypad.
+
+This is a fork of [meshtastic/firmware](https://github.com/meshtastic/firmware).
+The port lives on the **`jppdevice` branch**, on top of upstream tag
+`v2.7.24.472b14c`. It is a private board port, not a proposal for mainline.
+
+- **[docs/jppdevice-build-guide.md](docs/jppdevice-build-guide.md)** — build, flash, configure, update
+- **[docs/jppdevice-hardware.md](docs/jppdevice-hardware.md)** — hardware spec: pins, buses, measured ADC bands
+
+```bash
+pio run -e jppdevice            # build
+pio run -e jppdevice -t upload  # flash
+```
+
+Everything board-specific is under `variants/esp32c6/jppdevice/`,
+`src/gps/DS1307.*`, `src/input/JppDeviceKeyboard.*` and `docs/jppdevice-*.md`.
+See `git log --oneline v2.7.24.472b14c..jppdevice` for the full change set.
+
+---
+
+*Upstream Meshtastic README follows.*
+
 <div align="center" markdown="1">
 
 <img src=".github/meshtastic_logo.png" alt="Meshtastic Logo" width="80"/>
