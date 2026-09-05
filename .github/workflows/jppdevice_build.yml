@@ -1,0 +1,61 @@
+name: Build jppdevice
+
+# The only workflow this fork runs. Meshtastic's own workflows are left in the
+# tree untouched -- deleting them would conflict on every rebase onto a new
+# upstream tag -- and are disabled server-side instead:
+#
+#   gh api repos/OWNER/REPO/actions/workflows --paginate \
+#     -q '.workflows[] | select(.path != ".github/workflows/jppdevice_build.yml") | .id' \
+#   | xargs -I{} gh api -X PUT repos/OWNER/REPO/actions/workflows/{}/disable
+#
+# Re-run that after a rebase that pulls in new upstream workflow files.
+
+on:
+  push:
+    branches: [jppdevice]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+  pull_request:
+    branches: [jppdevice]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # protobufs is required -- the build fails without it
+          submodules: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini', 'variants/esp32c6/jppdevice/platformio.ini') }}
+          restore-keys: pio-${{ runner.os }}-
+
+      - name: Install PlatformIO
+        run: pip install --upgrade platformio
+
+      - name: Build
+        run: pio run -e jppdevice
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-jppdevice
+          path: |
+            .pio/build/jppdevice/firmware-jppdevice-*.factory.bin
+            .pio/build/jppdevice/firmware-jppdevice-*.bin
+          # Fail loudly if the build output ever moves, rather than
+          # silently publishing an empty artifact
+          if-no-files-found: error
