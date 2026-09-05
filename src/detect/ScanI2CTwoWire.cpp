@@ -679,7 +679,17 @@ void ScanI2CTwoWire::scanPort(I2CPort port, uint8_t *address, uint8_t asize)
                 break;
 
             case ICM20948_ADDR:     // same as BMX160_ADDR, BMI270_ADDR_ALT, and SEN5X_ADDR
-            case ICM20948_ADDR_ALT: // same as MPU6050_ADDR, BMI270_ADDR
+            case ICM20948_ADDR_ALT: // same as MPU6050_ADDR, BMI270_ADDR, DS1307_RTC
+#ifdef DS1307_RTC
+                // DS1307 shares 0x68 with IMU sensors. When DS1307_RTC is defined,
+                // treat this address as an RTC — the variant excludes environmental
+                // sensors, so IMU detection is unnecessary.
+                if (addr.address == DS1307_RTC) {
+                    type = RTC_DS1307;
+                    logFoundDevice("DS1307", (uint8_t)addr.address);
+                    break;
+                }
+#endif
                 registerValue = getRegisterValue(ScanI2CTwoWire::RegisterLocation(addr, 0x00), 1);
 #ifdef HAS_ICM20948
                 type = ICM20948;
