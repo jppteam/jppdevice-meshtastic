@@ -332,6 +332,19 @@ class AnalogBatteryLevel : public HasBatteryLevel
             raw = espAdcRead();
             scaled = esp_adc_cal_raw_to_voltage(raw, adc_characs);
             scaled *= operativeAdcMultiplier;
+#elif defined(ARCH_ESP32)
+            // ESP32 targets without the legacy calibration API (ESP32-C6 and
+            // friends). analogReadMilliVolts() applies the current esp_adc
+            // calibration scheme (curve fitting where the chip supports it,
+            // line fitting otherwise), which matters here: at 12 dB
+            // attenuation these ADCs are non-linear enough that the flat
+            // raw * Vref / 4095 formula below reads a full battery well under
+            // its real voltage.
+            for (uint32_t i = 0; i < BATTERY_SENSE_SAMPLES; i++) {
+                raw += analogReadMilliVolts(BATTERY_PIN); // calibrated mV, not a raw count
+            }
+            raw = raw / BATTERY_SENSE_SAMPLES;
+            scaled = operativeAdcMultiplier * raw;
 #else // block for all other platforms
 #ifdef ARCH_NRF52
             concurrency::LockGuard saadcGuard(concurrency::nrf52SaadcLock);
