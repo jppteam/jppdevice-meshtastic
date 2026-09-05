@@ -1,14 +1,16 @@
 name: Build jppdevice
 
-# The only workflow this fork runs. Meshtastic's own workflows are left in the
-# tree untouched -- deleting them would conflict on every rebase onto a new
-# upstream tag -- and are disabled server-side instead:
+# One of this fork's own workflows. Meshtastic's are left in the tree untouched
+# -- deleting them would conflict on every rebase onto a new upstream tag --
+# and are disabled server-side instead. Everything named jpp* is ours and stays
+# enabled:
 #
 #   gh api repos/OWNER/REPO/actions/workflows --paginate \
-#     -q '.workflows[] | select(.path != ".github/workflows/jppdevice_build.yml") | .id' \
+#     -q '.workflows[] | select(.path | startswith(".github/workflows/jpp") | not) | .id' \
 #   | xargs -I{} gh api -X PUT repos/OWNER/REPO/actions/workflows/{}/disable
 #
-# Re-run that after a rebase that pulls in new upstream workflow files.
+# Re-run that after a rebase that pulls in new upstream workflow files. Name any
+# further workflows of ours jpp*.yml so they are excluded automatically.
 
 on:
   push:
