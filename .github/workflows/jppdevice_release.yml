@@ -1,0 +1,78 @@
+name: Release jppdevice
+
+# One of this fork's own workflows (see jppdevice_build.yml for the naming
+# convention and the server-side disable command for upstream workflows).
+#
+# Runs after "Build jppdevice" finishes, downloads the firmware artifact it
+# produced, and publishes the two binaries as separate assets on a GitHub
+# release -- not bundled into a zip.
+
+on:
+  workflow_run:
+    workflows: ["Build jppdevice"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Only for green builds of our own branch.
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'jppdevice' &&
+      github.event.workflow_run.event != 'pull_request'
+
+    steps:
+      - name: Download firmware artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: firmware-jppdevice
+          path: firmware
+          # Cross-workflow download: pull the artifact from the run that
+          # triggered us, not from this run.
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MERGED=$(cd firmware && ls meshtastic-jppdevice-*.merged.bin)
+          APP=$(cd firmware && ls meshtastic-jppdevice-*.app.bin)
+
+          # MERGED is meshtastic-jppdevice-<version>-<build index>.merged.bin
+          stem=${MERGED#meshtastic-jppdevice-}
+          stem=${stem%.merged.bin}
+          VERSION=${stem%-*}
+          BUILD_INDEX=${stem##*-}
+          tag="build-${BUILD_INDEX}"
+
+          notes=$(cat <<EOF
+          # Meshtastic ${VERSION} (build ${BUILD_INDEX})
+
+          You can install Meshtastic to your J++Device in two ways:
+
+          1. J++Device Manager
+             - Download \`${MERGED}\` from the assets of this release below
+             - Go to https://jppdevice.by.m4l3vi.ch/manager
+             - Connect the J++Device to your computer
+             - Follow the UI to choose the downloaded binary and install it
+          2. \`esptool\`
+             - [Install \`esptool\`](https://docs.espressif.com/projects/esptool/en/latest/esp32/installation.html)
+             - Download \`${MERGED}\` from the assets of this release below
+             - Open a terminal in the folder with the downloaded binary
+             - Connect the J++Device to your computer
+             - Run the flashing command:
+               \`esptool.py --chip esp32c6 --baud 921600 write_flash 0x0 ${MERGED}\`
+          EOF
+          )
+
+          gh release create "$tag" \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.event.workflow_run.head_sha }}" \
+            --title "Meshtastic ${VERSION} (build ${BUILD_INDEX})" \
+            --notes "$notes" \
+            "firmware/${MERGED}" \
+            "firmware/${APP}"
