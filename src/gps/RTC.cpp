@@ -7,6 +7,11 @@
 #include <sys/time.h>
 #include <time.h>
 
+#ifdef DS1307_RTC
+#include "DS1307.h"
+static DS1307 ds1307;
+#endif
+
 static RTCQuality currentQuality = RTCQualityNone;
 uint32_t lastSetFromPhoneNtpOrGps = 0;
 
@@ -176,6 +181,36 @@ RTCSetResult readFromRTC()
     } else {
         LOG_WARN("RTC not found (found address 0x%02X)", rtc_found.address);
     }
+#elif defined(DS1307_RTC)
+    if (rtc_found.address == DS1307_RTC) {
+        uint32_t now = millis();
+        ds1307.begin(Wire);
+        tm t;
+        if (ds1307.getDateTime(&t)) {
+            tv.tv_sec = gm_mktime(&t);
+            tv.tv_usec = 0;
+            uint32_t printableEpoch = tv.tv_sec;
+            LOG_DEBUG("Read RTC time from DS1307 as %02d-%02d-%02d %02d:%02d:%02d (%ld)", t.tm_year + 1900,
+                      t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec, printableEpoch);
+#ifdef BUILD_EPOCH
+            if (tv.tv_sec < BUILD_EPOCH) {
+                if (Throttle::isWithinTimespanMs(lastTimeValidationWarning, TIME_VALIDATION_WARNING_INTERVAL_MS) == false) {
+                    LOG_WARN("Ignore time (%ld) before build epoch (%ld)!", printableEpoch, BUILD_EPOCH);
+                    lastTimeValidationWarning = millis();
+                }
+                return RTCSetResultInvalidTime;
+            }
+#endif
+            if (currentQuality == RTCQualityNone) {
+                RTCQuality oldQuality = currentQuality;
+                timeStartMsec = now;
+                zeroOffsetSecs = tv.tv_sec;
+                currentQuality = RTCQualityDevice;
+                triggerNodeInfoCheckOnTimeSource(oldQuality, currentQuality);
+            }
+            return RTCSetResultSuccess;
+        }
+    }
 #elif defined(RX8130CE_RTC)
     if (rtc_found.address == RX8130CE_RTC) {
         uint32_t now = millis();
@@ -319,6 +354,17 @@ RTCSetResult perhapsSetRTC(RTCQuality q, const struct timeval *tv, bool forceUpd
                       t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, printableEpoch);
         } else {
             LOG_WARN("RTC not found (found address 0x%02X)", rtc_found.address);
+        }
+#elif defined(DS1307_RTC)
+        if (rtc_found.address == DS1307_RTC) {
+            ds1307.begin(Wire);
+            tm *t = gmtime(&tv->tv_sec);
+            if (ds1307.setDateTime(t)) {
+                LOG_DEBUG("DS1307 setDateTime %02d-%02d-%02d %02d:%02d:%02d (%ld)", t->tm_year + 1900, t->tm_mon + 1,
+                          t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, printableEpoch);
+            } else {
+                LOG_WARN("Failed to set time for DS1307");
+            }
         }
 #elif defined(RX8130CE_RTC)
         if (rtc_found.address == RX8130CE_RTC) {
