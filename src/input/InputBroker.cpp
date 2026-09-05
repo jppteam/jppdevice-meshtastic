@@ -13,6 +13,7 @@
 
 #if !MESHTASTIC_EXCLUDE_INPUTBROKER
 #include "input/ExpressLRSFiveWay.h"
+#include "input/JppDeviceKeyboard.h"
 #include "input/RotaryEncoderImpl.h"
 #include "input/RotaryEncoderInterruptImpl1.h"
 #include "input/SerialKeyboardImpl.h"
@@ -422,5 +423,8 @@ void InputBroker::Init()
 #endif
 #ifdef INPUTBROKER_EXPRESSLRSFIVEWAY_TYPE
     expressLRSFiveWayInput = new ExpressLRSFiveWay();
+#endif
+#ifdef HAS_JPPDEVICE_KEYBOARD
+    jppDeviceKeyboard = new JppDeviceKeyboard("jppkb");
 #endif
 }
