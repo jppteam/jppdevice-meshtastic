@@ -7,6 +7,11 @@
 // "legacy adc calibration driver is deprecated, please migrate to use esp_adc/adc_cali.h and esp_adc/adc_cali_scheme.h
 #include <esp_adc_cal.h>
 #include <soc/adc_channel.h>
+// esp_adc_cal.h only declares the legacy calibration API for these targets.
+// Elsewhere (ESP32-C6, ...) Power.cpp falls back to plain analogRead().
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#define HAS_ESP_ADC_CAL 1
+#endif
 #endif
 
 #ifndef NUM_OCV_POINTS

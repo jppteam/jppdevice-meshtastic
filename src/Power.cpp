@@ -58,7 +58,7 @@
 #define DELAY_FOREVER portMAX_DELAY
 #endif
 
-#if defined(BATTERY_PIN) && defined(ARCH_ESP32)
+#if defined(BATTERY_PIN) && defined(HAS_ESP_ADC_CAL)
 
 #ifndef BAT_MEASURE_ADC_UNIT // ADC1 is default
 static const adc1_channel_t adc_channel = ADC_CHANNEL;
@@ -76,7 +76,7 @@ static const adc_atten_t atten = ADC_ATTEN_DB_12;
 #else
 static const adc_atten_t atten = ADC_ATTENUATION;
 #endif
-#endif // BATTERY_PIN && ARCH_ESP32
+#endif // BATTERY_PIN && HAS_ESP_ADC_CAL
 
 #ifdef EXT_CHRG_DETECT
 #ifndef EXT_CHRG_DETECT_MODE
@@ -328,7 +328,7 @@ class AnalogBatteryLevel : public HasBatteryLevel
             float scaled = 0;
 
             battery_adcEnable();
-#ifdef ARCH_ESP32 // ADC block for espressif platforms
+#ifdef HAS_ESP_ADC_CAL // calibrated ADC block for espressif platforms that support it
             raw = espAdcRead();
             scaled = esp_adc_cal_raw_to_voltage(raw, adc_characs);
             scaled *= operativeAdcMultiplier;
@@ -363,7 +363,7 @@ class AnalogBatteryLevel : public HasBatteryLevel
         return 0;
     }
 
-#if defined(ARCH_ESP32) && !defined(HAS_PMU) && defined(BATTERY_PIN)
+#if defined(HAS_ESP_ADC_CAL) && !defined(HAS_PMU) && defined(BATTERY_PIN)
     /**
      * ESP32 specific function for getting calibrated ADC reads
      */
@@ -639,7 +639,7 @@ bool Power::analogInit()
 #define BATTERY_SENSE_RESOLUTION_BITS 10
 #endif
 
-#ifdef ARCH_ESP32 // ESP32 needs special analog stuff
+#ifdef HAS_ESP_ADC_CAL // ESP32 needs special analog stuff
 
 #ifndef ADC_WIDTH // max resolution by default
     static const adc_bits_width_t width = ADC_WIDTH_BIT_12;
@@ -675,7 +675,7 @@ bool Power::analogInit()
     else {
         LOG_INFO("ADC config based on default reference voltage");
     }
-#endif // ARCH_ESP32
+#endif // HAS_ESP_ADC_CAL
 
     // NRF52 ADC init moved to powerHAL_init in nrf52 platform
 
