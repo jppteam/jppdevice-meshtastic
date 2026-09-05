@@ -50,8 +50,6 @@ jobs:
           tag="build-${BUILD_INDEX}"
 
           notes=$(cat <<EOF
-          # Meshtastic ${VERSION} (build ${BUILD_INDEX})
-
           You can install Meshtastic to your J++Device in two ways:
 
           1. J++Device Manager
