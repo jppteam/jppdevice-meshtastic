@@ -25,10 +25,12 @@ class JppDeviceKeyboard : public Observable<const InputEvent *>, public concurre
     int32_t runOnce() override;
 
   private:
-    int lastKey   = -1;
+    bool padReady = false;
+    int lastKey = -1;
     int sameCount = 0;
 
-    int  readKey();
+    void setupPad();
+    int readKey();
     void sendKey(input_broker_event key);
 };
 

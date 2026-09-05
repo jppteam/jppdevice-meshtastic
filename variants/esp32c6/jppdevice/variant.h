@@ -54,16 +54,25 @@
 // ── Buzzer (GPIO3, LEDC) ───────────────────────────────────────────────────
 #define PIN_BUZZER 3
 
-// ── 5-key ADC resistor-ladder keyboard (GPIO2 = ADC1_CH2) ──────────────────
+// ── 5-key ADC resistor-ladder keypad (GPIO2 = ADC1_CH2) ────────────────────
+// The chip's internal ~45 kΩ pull-up is the TOP OF THE LADDER, not just an
+// input option: without it the pin floats and ghost-presses. The driver must
+// enable it *after* configuring the ADC, or ADC setup clobbers the pad config.
+//
+// Raw 12-bit thresholds at 12 dB attenuation, measured on a reference unit
+// (jppdos HARDWARE_SUMMARY.md §4.6). Pull-up resistance varies ±30 %
+// chip-to-chip, so these are midpoints between adjacent bands and may need
+// re-tuning per unit.
 #define HAS_JPPDEVICE_KEYBOARD
 #define JPPDEVICE_KB_PIN 2
-// Upper-bound thresholds for 12-bit ADC readings:
-#define JPPDEVICE_KEY_UP_MAX      500   // KEY1: raw < 500
-#define JPPDEVICE_KEY_DOWN_MAX   1300   // KEY2: 500 – 1299
-#define JPPDEVICE_KEY_LEFT_MAX   2000   // KEY3: 1300 – 1999
-#define JPPDEVICE_KEY_RIGHT_MAX  2800   // KEY4: 2000 – 2799
-#define JPPDEVICE_KEY_SELECT_MAX 3800   // KEY5: 2800 – 3799
-// raw >= 3800 → no key
+// Upper bound of each band, in ascending ADC order — note this is NOT the
+// order the keys are numbered on the board.
+#define JPPDEVICE_KEY_LEFT_MAX    250 // ≈0 Ω short, raw centre ~4
+#define JPPDEVICE_KEY_UP_MAX      806 // ≈5.7 kΩ,    raw centre ~492
+#define JPPDEVICE_KEY_DOWN_MAX   1412 // ≈15.5 kΩ,   raw centre ~1120
+#define JPPDEVICE_KEY_RIGHT_MAX  2094 // ≈29 kΩ,     raw centre ~1710
+#define JPPDEVICE_KEY_SELECT_MAX 2910 // ≈59 kΩ,     raw centre ~2476
+// raw >= 2910 → no key (ladder bleed ≈148 kΩ, raw centre ~3344)
 
 // ── Feature exclusions ──────────────────────────────────────────────────────
 #define MESHTASTIC_EXCLUDE_GPS                  1
