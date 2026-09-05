@@ -51,13 +51,32 @@ jobs:
       - name: Build
         run: pio run -e jppdevice
 
+      - name: Rename firmware
+        working-directory: .pio/build/jppdevice
+        env:
+          BUILD_INDEX: ${{ github.run_number }}
+        run: |
+          # *.factory.bin is the full flash image (bootloader + partition
+          # table + OTA data + app), flashed at offset 0x0. The plain *.bin
+          # is just the app partition, for OTA. Rename both to
+          #   meshtastic-jppdevice-<meshtastic version>-<build index>.<kind>.bin
+          # -- the raw PlatformIO output embeds a git hash that changes on
+          # every commit.
+          p="$GITHUB_WORKSPACE/version.properties"
+          major=$(grep -oP 'major\s*=\s*\K[0-9]+' "$p")
+          minor=$(grep -oP 'minor\s*=\s*\K[0-9]+' "$p")
+          build=$(grep -oP 'build\s*=\s*\K[0-9]+' "$p")
+          stem="meshtastic-jppdevice-${major}.${minor}.${build}-${BUILD_INDEX}"
+          mv firmware-jppdevice-*.factory.bin "${stem}.merged.bin"
+          mv firmware-jppdevice-*.bin "${stem}.app.bin"
+
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
           name: firmware-jppdevice
           path: |
-            .pio/build/jppdevice/firmware-jppdevice-*.factory.bin
-            .pio/build/jppdevice/firmware-jppdevice-*.bin
+            .pio/build/jppdevice/meshtastic-jppdevice-*.merged.bin
+            .pio/build/jppdevice/meshtastic-jppdevice-*.app.bin
           # Fail loudly if the build output ever moves, rather than
           # silently publishing an empty artifact
           if-no-files-found: error
