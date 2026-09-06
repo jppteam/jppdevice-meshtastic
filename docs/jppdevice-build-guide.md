@@ -3,7 +3,7 @@
 This guide covers building and flashing Meshtastic firmware for the J++Device
 (ESP32-C6 + SX1276 LoRa).
 
-**Base firmware version:** Meshtastic v2.7.24 (tag `v2.7.24.472b14c`)
+**Base firmware version:** Meshtastic v2.7.26 (tag `v2.7.26.54e0d8d`)
 
 ---
 
@@ -11,7 +11,7 @@ This guide covers building and flashing Meshtastic firmware for the J++Device
 
 A fork of [meshtastic/firmware](https://github.com/meshtastic/firmware) carrying
 the J++Device board port on the **`jppdevice` branch**, committed on top of the
-upstream tag `v2.7.24.472b14c`. It is not intended to be submitted upstream.
+upstream tag `v2.7.26.54e0d8d`. It is not intended to be submitted upstream.
 
 The port is kept as a branch rather than a set of copied files so that moving to
 a new Meshtastic release is a `git rebase` (see §8). Everything board-specific
@@ -29,7 +29,7 @@ The port also patches a handful of upstream files — `RTC.cpp`, `ScanI2C*`,
 will land if any do.
 
 ```bash
-git log --oneline v2.7.24.472b14c..jppdevice
+git log --oneline v2.7.26.54e0d8d..jppdevice
 ```
 
 The `esp32:` commit in that list is a general ESP32-C6 fix rather than
@@ -89,7 +89,7 @@ Flash: 57.7% (used 1399554 bytes from 2424832 bytes)
   picked up. Verify `variants/esp32c6/jppdevice/platformio.ini` exists; the
   top-level `platformio.ini` globs it via `variants/*/*/platformio.ini`.
 - *`esp32c6_base` not found* — you are on a firmware tag that predates
-  `variants/esp32c6/esp32c6.ini`. Use v2.7.24 or newer.
+  `variants/esp32c6/esp32c6.ini`. Use v2.7.26 or newer.
 - *Undefined reference to a driver you just added* — check that the file
   includes `configuration.h` **before** testing any variant macro. A guard like
   `#ifdef DS1307_RTC` placed above that include silently compiles the whole

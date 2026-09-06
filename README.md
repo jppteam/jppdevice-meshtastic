@@ -6,7 +6,7 @@ Meshtastic is an open source, off-grid, decentralized mesh network designed for 
 
 This is a fork of [meshtastic/firmware](https://github.com/meshtastic/firmware).
 The port lives on the **`jppdevice` branch**, on top of upstream tag
-`v2.7.24.472b14c`. It is a private board port, not a proposal for mainline.
+`v2.7.26.54e0d8d`. It is a private board port, not a proposal for mainline.
 
 ## Installation
 
@@ -98,4 +98,4 @@ pio run -e jppdevice -t upload  # flash
 
 Everything board-specific is under `variants/esp32c6/jppdevice/`,
 `src/gps/DS1307.*`, `src/input/JppDeviceKeyboard.*` and `docs/jppdevice-*.md`.
-See `git log --oneline v2.7.24.472b14c..jppdevice` for the full change set.
+See `git log --oneline v2.7.26.54e0d8d..jppdevice` for the full change set.
